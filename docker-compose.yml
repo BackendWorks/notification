@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  mailer:
+    build:
+      context: ./notification
+    restart: "no"
+    env_file:
+      - ./.env
+      - ./notification/.${NODE_ENV}.env
+    networks:
+      - backend
+    volumes:
+      - ./notification/:/var/www/notification
+      - /var/www/notification/node_modules
+    depends_on:
+      database:
+        condition: service_healthy
+    links:
+      - database
+      - rabbitmq
