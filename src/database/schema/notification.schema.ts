@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Schema as MongooseSchema } from 'mongoose';
 
-export type NotifcationDocument = Notfication & Document;
+export type NotifcationDocument = Notification & Document;
 
 @Schema()
-export class Notfication {
+export class Notification {
   @Prop({ type: 'String' })
   content: string;
 

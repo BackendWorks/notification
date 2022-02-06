@@ -1,3 +1,4 @@
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -8,13 +9,26 @@ import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { ClientAuthGuard } from './core/guards/auth.guard';
 import {
-  Notfication,
+  Notification,
   NotificationSchema,
 } from './database/schema/notification.schema';
 
 @Module({
   imports: [
     ConfigModule,
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        redis: {
+          host: configService.get('redis_host'),
+          port: configService.get('redis_port'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+    BullModule.registerQueue({
+      name: 'email-sender',
+    }),
     ClientsModule.registerAsync([
       {
         name: 'TOKEN_SERVICE',
@@ -57,7 +71,7 @@ import {
       inject: [ConfigService],
     }),
     MongooseModule.forFeature([
-      { name: Notfication.name, schema: NotificationSchema },
+      { name: Notification.name, schema: NotificationSchema },
     ]),
   ],
   controllers: [AppController],
@@ -69,4 +83,4 @@ import {
     AppService,
   ],
 })
-export class AppModule {}
+export class AppModule { }

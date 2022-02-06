@@ -31,13 +31,15 @@
     "amqp-connection-manager": "^3.6.0",
     "amqplib": "^0.8.0",
     "bull": "^4.5.0",
+    "class-validator": "^0.13.2",
     "dotenv": "^10.0.0",
     "firebase-admin": "^10.0.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.1.10",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
-    "rxjs": "^7.2.0"
+    "rxjs": "^7.2.0",
+    "swagger-ui-express": "^4.3.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.0.0",

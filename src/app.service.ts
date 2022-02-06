@@ -4,7 +4,7 @@ import { Queue } from 'bull';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
-  Notfication,
+  Notification,
   NotifcationDocument,
 } from 'src/database/schema/notification.schema';
 import { firstValueFrom } from 'rxjs';
@@ -14,7 +14,7 @@ import { INotificationPayload } from './core/interfaces/INotificationPayload';
 export class AppService {
   constructor(
     @InjectQueue('email-sender') private taskQueue: Queue,
-    @InjectModel(Notfication.name)
+    @InjectModel(Notification.name)
     private notificationModel: Model<NotifcationDocument>,
     @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
   ) {
