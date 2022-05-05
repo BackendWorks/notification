@@ -37,7 +37,7 @@ import {
           transport: Transport.RMQ,
           options: {
             urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('notification_queue')}`,
+            queue: `${configService.get('token_queue')}`,
             queueOptions: {
               durable: false,
             },
