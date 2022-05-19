@@ -13,7 +13,7 @@ import { INotificationPayload } from './core/interfaces/INotificationPayload';
 @Injectable()
 export class AppService {
   constructor(
-    @InjectQueue('email-sender') private taskQueue: Queue,
+    @InjectQueue('notification-sender') private taskQueue: Queue,
     @InjectModel(Notification.name)
     private notificationModel: Model<NotifcationDocument>,
     @Inject('USER_SERVICE') private readonly userClient: ClientProxy,

@@ -9,7 +9,7 @@ export class TaskProcessor {
   constructor() {
     firebase.initializeApp({
       credential: firebase.credential.cert(
-        path.join(__dirname, '../../firebase.config.json'),
+        path.join(__dirname, '..', '..', 'firebase.config.json'),
       ),
     });
   }

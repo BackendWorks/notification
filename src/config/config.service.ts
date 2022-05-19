@@ -12,6 +12,8 @@ export class ConfigService {
     this.config.notification_queue = process.env.RABBITMQ_NOTIFICATION_QUEUE;
     this.config.token_queue = process.env.RABBITMQ_TOKEN_QUEUE;
     this.config.env = process.env.NODE_ENV;
+    this.config.redis_host = process.env.REDIS_HOST;
+    this.config.redis_port = process.env.REDIS_PORT;
   }
 
   public get(key: string): any {

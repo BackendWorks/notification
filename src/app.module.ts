@@ -27,7 +27,7 @@ import {
       inject: [ConfigService],
     }),
     BullModule.registerQueue({
-      name: 'email-sender',
+      name: 'notification-sender',
     }),
     ClientsModule.registerAsync([
       {
