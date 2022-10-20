@@ -6,7 +6,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   Notification,
   NotifcationDocument,
-} from 'src/database/schema/notification.schema';
+} from 'src/schemas/notification.schema';
 import { firstValueFrom } from 'rxjs';
 import { ClientProxy } from '@nestjs/microservices';
 import { INotificationPayload } from './core/interfaces/INotificationPayload';
@@ -16,7 +16,7 @@ export class AppService {
     @InjectQueue('notification-sender') private taskQueue: Queue,
     @InjectModel(Notification.name)
     private notificationModel: Model<NotifcationDocument>,
-    @Inject('USER_SERVICE') private readonly userClient: ClientProxy,
+    @Inject('AUTH_SERVICE') private readonly userClient: ClientProxy,
   ) {
     this.userClient.connect();
   }

@@ -10,7 +10,7 @@ import { firstValueFrom } from 'rxjs';
 @Injectable()
 export class ClientAuthGuard implements CanActivate {
   public constructor(
-    @Inject('TOKEN_SERVICE') private readonly client: ClientProxy,
+    @Inject('AUTH_SERVICE') private readonly client: ClientProxy,
   ) {
     this.client.connect();
   }
