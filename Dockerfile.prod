@@ -1,4 +1,4 @@
-FROM node:14.16.0-alpine
+FROM node:14-alpine
 RUN apk add --no-cache --virtual .build-deps alpine-sdk python3
 RUN mkdir -p /var/www/notification
 WORKDIR /var/www/notification
