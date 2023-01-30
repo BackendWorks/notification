@@ -1,57 +1,33 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Inject, Injectable } from '@nestjs/common';
 import { Queue } from 'bull';
-import { Model } from 'mongoose';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  Notification,
-  NotifcationDocument,
-} from 'src/schemas/notification.schema';
 import { firstValueFrom } from 'rxjs';
 import { ClientProxy } from '@nestjs/microservices';
-import { INotificationPayload } from './core/interfaces/INotificationPayload';
+import { INotificationPayload } from './types';
+import { PrismaService } from './core/services';
 @Injectable()
 export class AppService {
   constructor(
     @InjectQueue('notification-sender') private taskQueue: Queue,
-    @InjectModel(Notification.name)
-    private notificationModel: Model<NotifcationDocument>,
-    @Inject('AUTH_SERVICE') private readonly userClient: ClientProxy,
+    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+    private prismaService: PrismaService,
   ) {
-    this.userClient.connect();
+    this.authClient.connect();
   }
 
   public async manageNotifications(data: INotificationPayload): Promise<void> {
     const { content, type, payload, userId } = data;
-    await this.notificationModel.create({
-      user: userId,
-      content,
-      type,
-      payload,
+    await this.prismaService.notification.create({
+      data: {
+        user_id: userId,
+        content,
+        type,
+        payload,
+      },
     });
     const deviceId = await firstValueFrom(
-      this.userClient.send('get_device_id', { userId }),
+      this.authClient.send('get_device_id', { userId }),
     );
     this.taskQueue.add({ token: deviceId, ...data }, { backoff: 3 });
-  }
-
-  public async getUserNotifications(
-    userId: number,
-    skip: number,
-    limit: number,
-  ) {
-    return this.notificationModel.aggregate([
-      {
-        $match: {
-          user: userId,
-        },
-      },
-      {
-        $skip: skip,
-      },
-      {
-        $limit: limit,
-      },
-    ]);
   }
 }

@@ -2,20 +2,19 @@ import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
-import { ClientAuthGuard } from './core/guards/auth.guard';
-import {
-  Notification,
-  NotificationSchema,
-} from './schemas/notification.schema';
+import { JwtAuthGuard } from './core/guards';
+import { PrismaService } from './core/services';
+import { TerminusModule } from '@nestjs/terminus';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
     ConfigModule,
+    TerminusModule,
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -46,26 +45,15 @@ import {
         inject: [ConfigService],
       },
     ]),
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get('database_uri'),
-        useUnifiedTopology: true,
-        dbName: 'nest-notification',
-      }),
-      inject: [ConfigService],
-    }),
-    MongooseModule.forFeature([
-      { name: Notification.name, schema: NotificationSchema },
-    ]),
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ClientAuthGuard,
+      useClass: JwtAuthGuard,
     },
     AppService,
+    PrismaService,
   ],
 })
 export class AppModule {}

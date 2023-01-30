@@ -1,47 +1,59 @@
-import { Logger } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Logger,
+  ValidationPipe,
+} from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
-import { ResponseInterceptor } from './core/response.interceptor';
-
-const docsEndpoint = '/docs';
-const title = process.env.NOTIFICATION_HOST;
+import { HttpExceptionFilter, ResponseInterceptor } from './core/interceptor';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import * as express from 'express';
 
 function configureSwagger(app): void {
   const config = new DocumentBuilder()
-    .setTitle(title)
+    .setTitle('notification')
     .setDescription('API Description')
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup(docsEndpoint, app, document);
+  SwaggerModule.setup('/docs', app, document);
 }
 
 async function bootstrap() {
+  const server = express();
   const logger = new Logger();
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
+    bufferLogs: true,
+    cors: true,
+  });
   const configService = app.get(ConfigService);
-  app.enableCors({ origin: '*' });
-
   const moduleRef = app.select(AppModule);
   const reflector = moduleRef.get(Reflector);
-  app.useGlobalInterceptors(new ResponseInterceptor(reflector));
-
+  app.useGlobalInterceptors(
+    new ResponseInterceptor(reflector),
+    new ClassSerializerInterceptor(reflector),
+  );
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
   configureSwagger(app);
-
-  // Then combine it with a RabbitMQ microservice
   app.connectMicroservice({
     transport: Transport.RMQ,
     options: {
       urls: [`${configService.get('rb_url')}`],
-      queue: `${configService.get('files_queue')}`,
+      queue: `${configService.get('notification_queue')}`,
       queueOptions: { durable: false },
       prefetchCount: 1,
     },
   });
-
   await app.startAllMicroservices();
   await app.listen(configService.get('servicePort'));
   logger.log(
@@ -51,3 +63,5 @@ async function bootstrap() {
   );
 }
 bootstrap();
+
+process.on('unhandledRejection', (error) => console.log(error));
