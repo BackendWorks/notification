@@ -1,15 +1,15 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import * as firebase from 'firebase-admin';
-import * as path from 'path';
+import { join } from 'path';
 
-@Processor('email-sender')
+@Processor('notification-sender')
 export class TaskProcessor {
-  logger: Logger;
+  public logger: Logger;
   constructor() {
     firebase.initializeApp({
       credential: firebase.credential.cert(
-        path.join(__dirname, '..', '..', 'firebase.config.json'),
+        join(__dirname, '..', '..', 'firebase.config.json'),
       ),
     });
   }
@@ -19,10 +19,10 @@ export class TaskProcessor {
     const { token, content, payload } = data;
     this.sendMessage(token, content, payload)
       .then(() => {
-        this.logger.log('Notificaiton sent successfully');
+        this.logger.log('Notificaiton sent.');
       })
       .catch((e) => {
-        this.logger.error('Notification failed', e);
+        this.logger.error('Notification failed.', e);
       });
   }
 
