@@ -25,10 +25,11 @@ export class RolesGuard implements CanActivate {
       return true;
     }
     const request = context.switchToHttp().getRequest();
-    const token = request.headers['Authorization'];
+    let token = request.headers['authorization'];
     if (!token) {
       throw new UnauthorizedException();
     }
+    token = token.replace('Bearer ', '');
     const user = await firstValueFrom(
       this.authClient.send('get_user_from_token', JSON.stringify({ token })),
     );

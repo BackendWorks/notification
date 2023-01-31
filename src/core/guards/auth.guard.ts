@@ -18,22 +18,19 @@ export class JwtAuthGuard {
 
   async canActivate(context: ExecutionContext) {
     const type = context.getType();
-    if (type === 'rpc') {
-      return true;
-    }
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic) {
+    if (isPublic || type === 'rpc') {
       return true;
     }
     const request = context.switchToHttp().getRequest();
     let token = request.headers['authorization'];
-    token = token.replace('Bearer ', '');
     if (!token) {
       throw new UnauthorizedException();
     }
+    token = token.replace('Bearer ', '');
     const user = await firstValueFrom(
       this.authClient.send('get_user_from_token', JSON.stringify({ token })),
     );

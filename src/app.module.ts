@@ -7,14 +7,25 @@ import { AppService } from './app.service';
 import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { JwtAuthGuard } from './core/guards';
-import { PrismaService } from './core/services';
 import { TerminusModule } from '@nestjs/terminus';
 import { HealthController } from './health.controller';
+import { Notification, NotificationSchema } from './app.schema';
+import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
   imports: [
     ConfigModule,
     TerminusModule,
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get('database_url'),
+      }),
+      inject: [ConfigService],
+    }),
+    MongooseModule.forFeature([
+      { name: Notification.name, schema: NotificationSchema },
+    ]),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -53,7 +64,6 @@ import { HealthController } from './health.controller';
       useClass: JwtAuthGuard,
     },
     AppService,
-    PrismaService,
   ],
 })
 export class AppModule {}

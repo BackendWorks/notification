@@ -9,6 +9,6 @@ export class AppController {
 
   @EventPattern('send_notification')
   public sendNotification(@Payload() payload: INotificationPayload): void {
-    this.appService.manageNotifications(payload);
+    this.appService.createNotifications(payload);
   }
 }

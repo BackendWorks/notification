@@ -63,5 +63,3 @@ async function bootstrap() {
   );
 }
 bootstrap();
-
-process.on('unhandledRejection', (error) => console.log(error));
