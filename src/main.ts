@@ -1,20 +1,18 @@
-import {
-  ClassSerializerInterceptor,
-  Logger,
-  ValidationPipe,
-} from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { Transport } from '@nestjs/microservices';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { ConfigService } from './config/config.service';
-import { HttpExceptionFilter, ResponseInterceptor } from './core/interceptor';
+import { HttpExceptionFilter, ResponseInterceptor } from './interceptor';
 import { ExpressAdapter } from '@nestjs/platform-express';
+import { LoggerErrorInterceptor, Logger } from 'nestjs-pino';
 import * as express from 'express';
+import helmet from 'helmet';
 
 function configureSwagger(app): void {
   const config = new DocumentBuilder()
-    .setTitle('notification')
+    .setTitle('notification-service')
     .setDescription('API Description')
     .setVersion('1.0')
     .build();
@@ -23,18 +21,25 @@ function configureSwagger(app): void {
 }
 
 async function bootstrap() {
-  const server = express();
-  const logger = new Logger();
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server), {
-    bufferLogs: true,
-    cors: true,
-  });
+  const app = await NestFactory.create(
+    AppModule,
+    new ExpressAdapter(express()),
+    {
+      logger: false,
+      bufferLogs: true,
+      cors: true,
+    },
+  );
+  const logger = app.get(Logger);
+  app.useLogger(logger);
+  app.use(helmet());
   const configService = app.get(ConfigService);
   const moduleRef = app.select(AppModule);
   const reflector = moduleRef.get(Reflector);
   app.useGlobalInterceptors(
     new ResponseInterceptor(reflector),
     new ClassSerializerInterceptor(reflector),
+    new LoggerErrorInterceptor(),
   );
   app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
@@ -56,10 +61,6 @@ async function bootstrap() {
   });
   await app.startAllMicroservices();
   await app.listen(configService.get('servicePort'));
-  logger.log(
-    `🚀 Notification service running on port ${configService.get(
-      'servicePort',
-    )}`,
-  );
+  logger.log('🚀 Notification service started successfully');
 }
 bootstrap();

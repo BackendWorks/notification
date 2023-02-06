@@ -5,7 +5,7 @@ import { join } from 'path';
 
 @Processor('notification-sender')
 export class TaskProcessor {
-  public logger: Logger;
+  private readonly logger = new Logger(TaskProcessor.name);
   constructor() {
     firebase.initializeApp({
       credential: firebase.credential.cert(

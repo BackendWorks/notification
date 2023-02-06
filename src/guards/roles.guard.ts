@@ -31,7 +31,7 @@ export class RolesGuard implements CanActivate {
     }
     token = token.replace('Bearer ', '');
     const user = await firstValueFrom(
-      this.authClient.send('get_user_from_token', JSON.stringify({ token })),
+      this.authClient.send('validate_token', JSON.stringify({ token })),
     );
     if (!user) {
       throw new UnauthorizedException();

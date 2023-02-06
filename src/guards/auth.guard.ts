@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../../core/decorators';
+import { IS_PUBLIC_KEY } from '../decorators';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
@@ -17,12 +17,12 @@ export class JwtAuthGuard {
   ) {}
 
   async canActivate(context: ExecutionContext) {
-    const type = context.getType();
+    const isRpc = context.getType() === 'rpc';
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
     ]);
-    if (isPublic || type === 'rpc') {
+    if (isPublic || isRpc) {
       return true;
     }
     const request = context.switchToHttp().getRequest();
@@ -32,7 +32,7 @@ export class JwtAuthGuard {
     }
     token = token.replace('Bearer ', '');
     const user = await firstValueFrom(
-      this.authClient.send('get_user_from_token', JSON.stringify({ token })),
+      this.authClient.send('validate_token', JSON.stringify({ token })),
     );
     if (!user) {
       throw new UnauthorizedException();
