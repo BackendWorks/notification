@@ -45,6 +45,8 @@ import { LoggerModule } from 'nestjs-pino';
         redis: {
           host: configService.get('redis_host'),
           port: configService.get('redis_port'),
+          password: configService.get('redis_password'),
+          username: 'default',
         },
       }),
       inject: [ConfigService],

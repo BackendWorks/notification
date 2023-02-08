@@ -11,6 +11,7 @@ interface Config {
   env: string;
   redis_host: string;
   redis_port: string;
+  redis_password: string;
 }
 
 @Injectable()
@@ -25,6 +26,7 @@ export class ConfigService {
     this.config.env = process.env.NODE_ENV;
     this.config.redis_host = process.env.REDIS_HOST;
     this.config.redis_port = process.env.REDIS_PORT;
+    this.config.redis_password = process.env.REDIS_PASSWORD;
   }
 
   public get(key: keyof Config): any {

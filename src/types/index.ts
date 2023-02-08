@@ -5,6 +5,11 @@ export interface INotificationPayload {
   userId: number;
 }
 
+export interface GetResponse<T> {
+  count: number;
+  data: T[];
+}
+
 export enum NotificationType {
-  POST_UPDATED = 'post-updated',
+  WELCOME_NOTIFICATION = 'welcome_notification',
 }
