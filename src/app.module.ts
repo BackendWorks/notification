@@ -8,7 +8,6 @@ import { ConfigModule } from './config/config.module';
 import { ConfigService } from './config/config.service';
 import { JwtAuthGuard } from './guards';
 import { TerminusModule } from '@nestjs/terminus';
-import { HealthController } from './health.controller';
 import { Notification, NotificationSchema } from './app.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 import { LoggerModule } from 'nestjs-pino';
@@ -72,7 +71,7 @@ import { LoggerModule } from 'nestjs-pino';
       },
     ]),
   ],
-  controllers: [AppController, HealthController],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,
