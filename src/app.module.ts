@@ -10,24 +10,11 @@ import { JwtAuthGuard } from './guards';
 import { TerminusModule } from '@nestjs/terminus';
 import { Notification, NotificationSchema } from './app.schema';
 import { MongooseModule } from '@nestjs/mongoose';
-import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
     ConfigModule,
     TerminusModule,
-    LoggerModule.forRoot({
-      ...(process.env.NODE_ENV === 'development' && {
-        pinoHttp: {
-          transport: {
-            target: 'pino-pretty',
-            options: {
-              singleLine: true,
-            },
-          },
-        },
-      }),
-    }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
