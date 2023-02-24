@@ -61,6 +61,10 @@ async function bootstrap() {
   });
   await app.startAllMicroservices();
   await app.listen(configService.get('servicePort'));
-  logger.log('🚀 Notification service started successfully');
+  logger.log(
+    `🚀 Notification service started successfully on port ${configService.get(
+      'servicePort',
+    )}`,
+  );
 }
 bootstrap();
