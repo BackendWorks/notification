@@ -10,6 +10,7 @@ import { JwtAuthGuard } from './guards';
 import { TerminusModule } from '@nestjs/terminus';
 import { Notification, NotificationSchema } from './app.schema';
 import { MongooseModule } from '@nestjs/mongoose';
+import { FirebaseService } from './services';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { MongooseModule } from '@nestjs/mongoose';
       useClass: JwtAuthGuard,
     },
     AppService,
+    FirebaseService,
   ],
 })
 export class AppModule {}
