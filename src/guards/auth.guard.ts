@@ -32,12 +32,12 @@ export class JwtAuthGuard {
     }
     token = token.replace('Bearer ', '');
     const user = await firstValueFrom(
-      this.authClient.send('validate_token', JSON.stringify({ token })),
+      this.authClient.send('validate_token', token),
     );
     if (!user) {
       throw new UnauthorizedException();
     }
-    request.userId = user['userId'];
+    request.user = user;
     return true;
   }
 }

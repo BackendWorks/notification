@@ -20,7 +20,7 @@ function configureSwagger(app): void {
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('/docs', app, document);
+  SwaggerModule.setup('/api/docs', app, document);
 }
 
 async function bootstrap() {
@@ -33,6 +33,7 @@ async function bootstrap() {
       cors: true,
     },
   );
+  app.setGlobalPrefix('/api');
   app.use(helmet());
   const configService = app.get(ConfigService);
   const moduleRef = app.select(AppModule);
