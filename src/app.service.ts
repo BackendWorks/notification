@@ -1,6 +1,4 @@
-import { InjectQueue } from '@nestjs/bull';
-import { Inject, Injectable } from '@nestjs/common';
-import { Queue } from 'bull';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { ClientProxy } from '@nestjs/microservices';
 import { GetResponse, INotificationPayload } from './types';
@@ -8,14 +6,16 @@ import { Notification, NotificationDocument } from './app.schema';
 import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { GetNotificationDto } from './dtos/get-notification.dto';
+import { FirebaseService } from './services';
 
 @Injectable()
 export class AppService {
+  private readonly logger = new Logger(AppService.name);
   constructor(
-    @InjectQueue('notification-sender') private taskQueue: Queue,
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
     @InjectModel(Notification.name)
     private notificationModel: Model<NotificationDocument>,
+    private firebaseService: FirebaseService,
   ) {
     this.authClient.connect();
   }
@@ -35,7 +35,16 @@ export class AppService {
       );
       console.log('device id', user?.deviceId);
       if (user?.deviceId) {
-        this.taskQueue.add({ token: user.deviceId, ...data }, { backoff: 3 });
+        this.firebaseService
+          .sendMessage(user?.deviceId, content, payload)
+          .then(() => {
+            this.logger.log('notificaiton sent.');
+          })
+          .catch((e) => {
+            this.logger.error('notification failed.', e);
+          });
+      } else {
+        this.logger.log('device id is not exists!');
       }
     } catch (e) {
       throw e;

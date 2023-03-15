@@ -1,4 +1,3 @@
-import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
@@ -26,21 +25,6 @@ import { FirebaseService } from './services';
     MongooseModule.forFeature([
       { name: Notification.name, schema: NotificationSchema },
     ]),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('redis_host'),
-          port: configService.get('redis_port'),
-          password: configService.get('redis_password'),
-          username: 'default',
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    BullModule.registerQueue({
-      name: 'notification-sender',
-    }),
     ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',
