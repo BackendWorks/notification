@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import * as firebase from 'firebase-admin';
-import { join } from 'path';
+// import { join } from 'path';
 
 @Injectable()
 export class FirebaseService {
   constructor() {
-    firebase.initializeApp({
-      credential: firebase.credential.cert(
-        join(__dirname, '..', 'firebase.config.json'),
-      ),
-    });
+    // firebase.initializeApp({
+    //   credential: firebase.credential.cert(
+    //     join(__dirname, '..', 'firebase.config.json'),
+    //   ),
+    // });
   }
 
   public sendMessage(
