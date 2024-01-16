@@ -1,11 +1,12 @@
 {
-  "name": "notification",
+  "name": "@backendworks/notification",
   "version": "0.0.1",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "rimraf dist",
-    "build": "nest build && copyfiles firebase.config.json dist/",
+    "postinstall": "npx typesync",
+    "build": "nest build",
     "dev": "dotenv -e .env.local -- nest start --watch",
     "debug": "nest start --debug --watch",
     "start": "node dist/main",
@@ -14,12 +15,12 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "prepare": "husky install",
-    "pre-commit": "lint-staged"
+    "test:e2e": "jest --config ./test/jest-e2e.json --forceExit",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
+    "@nestjs/config": "^3.1.1",
     "@nestjs/core": "^8.0.0",
     "@nestjs/microservices": "^8.0.6",
     "@nestjs/mongoose": "^9.2.1",
@@ -37,6 +38,7 @@
     "helmet": "^6.0.1",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.9.0",
+    "nestjs-i18n": "^10.4.0",
     "reflect-metadata": "^0.1.13",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
@@ -74,6 +76,22 @@
     "ts-node": "^10.0.0",
     "tsconfig-paths": "^3.10.1",
     "typescript": "^4.3.5"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all",
+    "useTabs": false,
+    "tabWidth": 2,
+    "overrides": [
+      {
+        "files": "*.yml",
+        "options": {
+          "tadWidth": 2,
+          "printWidth": 40,
+          "singleQuote": true
+        }
+      }
+    ]
   },
   "jest": {
     "moduleFileExtensions": [

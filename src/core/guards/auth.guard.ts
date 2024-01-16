@@ -1,16 +1,18 @@
 import {
   ExecutionContext,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from '../decorators';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
-export class JwtAuthGuard {
+export class AuthGuard {
   constructor(
     private reflector: Reflector,
     @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
@@ -28,16 +30,16 @@ export class JwtAuthGuard {
     const request = context.switchToHttp().getRequest();
     let token = request.headers['authorization'];
     if (!token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('accessTokenUnauthorized');
     }
     token = token.replace('Bearer ', '');
-    const user = await firstValueFrom(
-      this.authClient.send('validate_token', token),
+    const response = await firstValueFrom(
+      this.authClient.send('validateToken', token),
     );
-    if (!user) {
-      throw new UnauthorizedException();
+    if (!response) {
+      throw new HttpException(response, HttpStatus.BAD_REQUEST);
     }
-    request.user = user;
+    request.user = response.data;
     return true;
   }
 }

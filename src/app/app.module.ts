@@ -1,30 +1,30 @@
 import { Module } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { ConfigModule } from './config/config.module';
-import { ConfigService } from './config/config.service';
-import { JwtAuthGuard } from './guards';
 import { TerminusModule } from '@nestjs/terminus';
-import { Notification, NotificationSchema } from './app.schema';
 import { MongooseModule } from '@nestjs/mongoose';
-import { FirebaseService } from './services';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CoreModule } from 'src/core/core.module';
+import configs from '../config';
 
 @Module({
   imports: [
-    ConfigModule,
+    ConfigModule.forRoot({
+      load: configs,
+      isGlobal: true,
+      cache: true,
+      envFilePath: ['.env'],
+      expandVariables: true,
+    }),
+    CoreModule,
     TerminusModule,
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get('database_url'),
+        uri: configService.get('db.uri'),
       }),
       inject: [ConfigService],
     }),
-    MongooseModule.forFeature([
-      { name: Notification.name, schema: NotificationSchema },
-    ]),
     ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',
@@ -32,8 +32,8 @@ import { FirebaseService } from './services';
         useFactory: async (configService: ConfigService) => ({
           transport: Transport.RMQ,
           options: {
-            urls: [`${configService.get('rb_url')}`],
-            queue: `${configService.get('auth_queue')}`,
+            urls: [`${configService.get('rmq.uri')}`],
+            queue: `${configService.get('rmq.auth')}`,
             queueOptions: {
               durable: false,
             },
@@ -44,13 +44,6 @@ import { FirebaseService } from './services';
     ]),
   ],
   controllers: [AppController],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: JwtAuthGuard,
-    },
-    AppService,
-    FirebaseService,
-  ],
+  providers: [],
 })
 export class AppModule {}
