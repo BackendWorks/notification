@@ -10,6 +10,7 @@ import { Reflector } from '@nestjs/core';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { IAuthUser } from 'src/modules/notification/interfaces/notification.interface';
 
 @Injectable()
 export class AuthGuard {
@@ -39,7 +40,7 @@ export class AuthGuard {
     if (!response) {
       throw new HttpException(response, HttpStatus.BAD_REQUEST);
     }
-    request.user = response.data;
+    request.user = response.data as IAuthUser;
     return true;
   }
 }

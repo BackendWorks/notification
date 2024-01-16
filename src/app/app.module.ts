@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CoreModule } from 'src/core/core.module';
 import configs from '../config';
+import { NotificationModule } from 'src/modules/notification/notification.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import configs from '../config';
         inject: [ConfigService],
       },
     ]),
+    NotificationModule,
   ],
   controllers: [AppController],
   providers: [],
