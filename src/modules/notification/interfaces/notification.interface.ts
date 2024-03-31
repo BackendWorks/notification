@@ -1,14 +1,14 @@
-export interface DeleteNotificationResponse {
+export interface INotificationSuccessResponse {
   status: boolean;
   message: string;
 }
 
-export interface NotificationGetManyResponse<T> {
+export interface INotificationGetManyResponse<T> {
   count: number;
   data: T[];
 }
 
-export interface NotificationSendResponse {
+export interface INotificationSendResponse {
   acknowledged: boolean;
   status: string;
   transactionId: string;
@@ -17,4 +17,5 @@ export interface NotificationSendResponse {
 export interface IAuthUser {
   id: string;
   role: string;
+  username: string;
 }
