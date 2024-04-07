@@ -2,30 +2,16 @@ import { Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
 import { TerminusModule } from '@nestjs/terminus';
-import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CoreModule } from 'src/core/core.module';
-import configs from '../config';
 import { NotificationModule } from 'src/modules/notification/notification.module';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: configs,
-      isGlobal: true,
-      cache: true,
-      envFilePath: ['.env'],
-      expandVariables: true,
-    }),
     CoreModule,
     TerminusModule,
-    MongooseModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get('db.uri'),
-      }),
-      inject: [ConfigService],
-    }),
+    CommonModule,
     ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',

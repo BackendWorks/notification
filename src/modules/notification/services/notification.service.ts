@@ -1,52 +1,57 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { InjectNovu } from '../providers/novu.provider';
-import { InjectModel } from '@nestjs/mongoose';
-import { Novu } from '@novu/node';
-import {
-  Notification,
-  NotificationDocument,
-} from '../schema/notification.schema';
-import { Model } from 'mongoose';
 import { SendEmailDto } from '../dtos/send.email.dto';
 import { SendTextDto } from '../dtos/send.text.dto';
 import { GetNotificationDto } from '../dtos/get.notification.dto';
-import { UpdateSubscriberDto } from '../dtos/update.sub.dto';
 import { CreateNotificationDto } from '../dtos/create.notification.dto';
-import { CreateSubscriberDto } from '../dtos/create.sub.dto';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
 import { INotificationService } from '../interfaces/notification.service.interface';
-import { NotificationSendResponse } from '../interfaces/notification.interface';
-import { Recipients, RecipientsDocument } from '../schema/recipients.schema';
+import { PrismaService } from 'src/common/services/prisma.service';
+import { Notification } from '@prisma/client';
+import {
+  INotificationGetManyResponse,
+  INotificationSendResponse,
+  INotificationSuccessResponse,
+} from '../interfaces/notification.interface';
+import { SendInAppDto } from '../dtos/send.inapp.dto';
 
 @Injectable()
 export class NotificationService implements INotificationService {
   private readonly logger = new Logger(NotificationService.name);
-  constructor(
-    @InjectNovu() private readonly novu: Novu,
-    @InjectModel(Notification.name)
-    private notificationModel: Model<NotificationDocument>,
-    @InjectModel(Recipients.name)
-    private recipientsModel: Model<RecipientsDocument>,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
-  async createNotification(userId: string, data: CreateNotificationDto) {
+  async createNotification(
+    senderId: string,
+    data: CreateNotificationDto,
+  ): Promise<Notification> {
     try {
-      const { body, title, type, recipientIds } = data;
+      const { body, title, type, recipientIds, subject } = data;
 
-      const notification = await this.notificationModel.create({
-        title,
-        body,
-        type,
-        senderId: userId,
+      const notification = await this.prismaService.notification.create({
+        data: {
+          title,
+          body,
+          type,
+          senderId,
+          actionPayload: {},
+          subject,
+        },
       });
 
-      const recipients = await Promise.all(
-        recipientIds.map((userId) => this.recipientsModel.create({ userId })),
+      await Promise.all(
+        recipientIds.map((id) => {
+          return this.prismaService.recipients.create({
+            data: {
+              userId: id,
+              seenByUser: false,
+              notification: {
+                connect: {
+                  id: notification.id,
+                },
+              },
+            },
+          });
+        }),
       );
-
-      notification.recipients = recipients.map((recipient) => recipient._id);
-
-      await notification.save();
 
       return notification;
     } catch (e) {
@@ -55,89 +60,61 @@ export class NotificationService implements INotificationService {
     }
   }
 
-  async updateNotification(data: UpdateNotificationDto) {
-    const { body, title, notificationId } = data;
+  async updateNotification(
+    notificationId: string,
+    data: UpdateNotificationDto,
+  ): Promise<Notification> {
+    const { body, title } = data;
 
-    return this.notificationModel.findOneAndUpdate(
-      {
+    return this.prismaService.notification.update({
+      where: {
         id: notificationId,
       },
-      {
-        $set: {
-          title,
-          body,
-        },
+      data: {
+        title,
+        body,
       },
-      {
-        new: false,
-      },
-    );
+    });
   }
 
-  async deleteNotification(notificationId: string) {
+  async deleteNotification(
+    notificationId: string,
+  ): Promise<INotificationSuccessResponse> {
     try {
-      await this.notificationModel.deleteOne({
-        id: notificationId,
+      await this.prismaService.notification.update({
+        where: {
+          id: notificationId,
+        },
+        data: {
+          deletedAt: new Date(),
+          isDeleted: true,
+        },
       });
       return {
+        message: 'Notification deleted',
         status: true,
-        message: 'Notification deleted.',
       };
     } catch (e) {
-      this.logger.error(e);
       throw e;
     }
   }
 
-  async createSubscriber(userId: string, data: CreateSubscriberDto) {
-    try {
-      const { email, firstName, lastName, phone } = data;
-      return this.novu.subscribers.identify(userId, {
-        email,
-        firstName,
-        lastName,
-        phone,
-      });
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
+  async getNotification(notificationId: string): Promise<Notification> {
+    return this.prismaService.notification.findUnique({
+      where: {
+        id: notificationId,
+      },
+    });
   }
 
-  async updateSubscriber(subId: string, data: UpdateSubscriberDto) {
+  async getNotifications(
+    userId: string,
+    query: GetNotificationDto,
+  ): Promise<INotificationGetManyResponse<Notification>> {
     try {
-      const { email, firstName, lastName, phone } = data;
-      await this.novu.subscribers.update(subId, {
-        email,
-        firstName,
-        lastName,
-        phone,
-      });
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
-  }
-
-  async deleteSubscriber(subId: string) {
-    try {
-      await this.novu.subscribers.delete(subId);
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
-  }
-
-  async getNotification(notificationId: string) {
-    return this.notificationModel.findById<Notification>(notificationId).exec();
-  }
-
-  async getNotifications(userId: string, data: GetNotificationDto) {
-    try {
-      const { skip, take, searchTerm } = data;
-      const count = await this.notificationModel.count().exec();
-      const response = await this.notificationModel
-        .find({
+      const { skip, take, searchTerm } = query;
+      const count = await this.prismaService.notification.count({
+        where: {
           ...(userId && {
             senderId: userId,
           }),
@@ -151,55 +128,57 @@ export class NotificationService implements INotificationService {
               },
             ],
           }),
-        })
-        .skip(skip)
-        .limit(take)
-        .exec();
+        },
+      });
+      const data = await this.prismaService.notification.findMany({
+        where: {
+          ...(userId && {
+            senderId: userId,
+          }),
+          ...(searchTerm && {
+            $or: [
+              {
+                title: searchTerm,
+              },
+              {
+                body: searchTerm,
+              },
+            ],
+          }),
+        },
+        skip,
+        take,
+      });
       return {
         count,
-        data: response,
+        data,
       };
     } catch (e) {
-      this.logger.error(e);
       throw e;
     }
   }
 
-  async sendEmail(data: SendEmailDto) {
-    try {
-      const { subId, type } = data;
-      const { data: result } = await this.novu.trigger(type, {
-        to: {
-          subscriberId: subId,
-        },
-        payload: {},
-      });
-      const response = result?.data as NotificationSendResponse;
-      return response;
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
+  async sendEmail(data: SendEmailDto): Promise<INotificationSendResponse> {
+    return Promise.resolve({
+      acknowledged: true,
+      status: 'OK',
+      transactionId: 'test',
+    });
   }
 
-  async sendText(data: SendTextDto) {
-    try {
-      const { subId, type } = data;
-      const sub = await this.novu.subscribers.get(subId);
-      const { data: user } = sub.data;
-      const { data: result } = await this.novu.trigger(type, {
-        to: {
-          subscriberId: subId,
-        },
-        payload: {
-          firstName: user?.firstName,
-        },
-      });
-      const response = result?.data as NotificationSendResponse;
-      return response;
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
-    }
+  async sendText(data: SendTextDto): Promise<INotificationSendResponse> {
+    return Promise.resolve({
+      acknowledged: true,
+      status: 'OK',
+      transactionId: 'test',
+    });
+  }
+
+  async sendInApp(data: SendInAppDto): Promise<INotificationSendResponse> {
+    return Promise.resolve({
+      acknowledged: true,
+      status: 'OK',
+      transactionId: 'test',
+    });
   }
 }

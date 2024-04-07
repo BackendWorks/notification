@@ -7,7 +7,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, Payload } from '@nestjs/microservices';
 import { GetNotificationDto } from '../dtos/get.notification.dto';
 import { AuthUser } from 'src/core/decorators/auth.user.decorator';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
@@ -16,6 +16,7 @@ import { NotificationService } from '../services/notification.service';
 import { SendEmailDto } from '../dtos/send.email.dto';
 import { SendTextDto } from '../dtos/send.text.dto';
 import { IAuthUser } from '../interfaces/notification.interface';
+import { SendInAppDto } from '../dtos/send.inapp.dto';
 
 @Controller({
   version: '1',
@@ -26,24 +27,6 @@ export class NotificationController {
     //
   }
 
-  @MessagePattern('createNotification')
-  async createNotificationPattern(@Payload() data) {
-    const payload = JSON.parse(JSON.stringify(data));
-    const { userId } = payload;
-    return this.notificationService.createNotification(userId, payload);
-  }
-
-  @MessagePattern('updateNotification')
-  async updateNotificationPattern(@Payload() data: UpdateNotificationDto) {
-    const payload = JSON.parse(JSON.stringify(data));
-    return this.notificationService.updateNotification(payload);
-  }
-
-  @MessagePattern('deleteNotification')
-  async deleteNotificationPattern(@Payload() notificationId: string) {
-    return this.notificationService.deleteNotification(notificationId);
-  }
-
   @EventPattern('sendTextMessage')
   async sendText(@Payload() data: SendTextDto) {
     const payload = JSON.parse(JSON.stringify(data));
@@ -52,6 +35,12 @@ export class NotificationController {
 
   @EventPattern('sendEmail')
   async sendEmail(@Payload() data: SendEmailDto) {
+    const payload = JSON.parse(JSON.stringify(data));
+    this.notificationService.sendEmail(payload);
+  }
+
+  @EventPattern('sendInApp')
+  async sendInApp(@Payload() data: SendInAppDto) {
     const payload = JSON.parse(JSON.stringify(data));
     this.notificationService.sendEmail(payload);
   }
@@ -67,9 +56,10 @@ export class NotificationController {
   @Put()
   async updateNotification(
     @AuthUser() user: IAuthUser,
+    @Param('id') notificationId: string,
     data: UpdateNotificationDto,
   ) {
-    return this.notificationService.updateNotification(data);
+    return this.notificationService.updateNotification(notificationId, data);
   }
 
   @Delete()

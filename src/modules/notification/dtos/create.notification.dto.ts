@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { NotificationSubjectType, NotificationType } from '@prisma/client';
 import { IsArray, IsEnum, IsNotEmpty, IsString } from 'class-validator';
-import { NotificationType } from '../schema/notification.type.schema';
 
 export class CreateNotificationDto {
   @ApiProperty()
@@ -32,4 +32,9 @@ export class CreateNotificationDto {
   @IsNotEmpty()
   @IsEnum(NotificationType)
   type: NotificationType;
+
+  @ApiProperty()
+  @IsNotEmpty()
+  @IsEnum(NotificationSubjectType)
+  subject: NotificationSubjectType;
 }

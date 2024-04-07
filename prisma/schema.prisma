@@ -1,0 +1,50 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Notification {
+  id            String                  @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  body          String
+  type          NotificationType
+  subject       NotificationSubjectType
+  actionPayload Json?
+  senderId      String
+  recipients    Recipients[]
+  createdAt     DateTime                @default(now())
+  updatedAt     DateTime                @updatedAt
+  deletedAt     DateTime?
+  isDeleted     Boolean                 @default(false)
+}
+
+model Recipients {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  userId         String
+  seenByUser     Boolean       @default(false)
+  notification   Notification? @relation(fields: [notificationId], references: [id])
+  notificationId String?       @db.ObjectId
+}
+
+enum NotificationSubjectType {
+  Welcome
+  PostUpdated
+  PasswordUpdated
+  ForgotPassword
+}
+
+enum NotificationType {
+  Email
+  Text
+  InApp
+}
