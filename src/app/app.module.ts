@@ -1,17 +1,20 @@
 import { Module } from '@nestjs/common';
+import configs from '../config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
 import { TerminusModule } from '@nestjs/terminus';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CoreModule } from 'src/core/core.module';
 import { NotificationModule } from 'src/modules/notification/notification.module';
-import { CommonModule } from 'src/common/common.module';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { join } from 'path';
+import { NotificationService } from 'src/modules/notification/services/notification.service';
+import { PrismaService } from 'src/core/services/prisma.service';
 
 @Module({
   imports: [
     CoreModule,
     TerminusModule,
-    CommonModule,
     ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',
@@ -29,9 +32,27 @@ import { CommonModule } from 'src/common/common.module';
         inject: [ConfigService],
       },
     ]),
+    ConfigModule.forRoot({
+      load: configs,
+      isGlobal: true,
+      cache: true,
+      envFilePath: ['.env'],
+      expandVariables: true,
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: join(__dirname, '../i18n/'),
+        watch: true,
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        AcceptLanguageResolver,
+      ],
+    }),
     NotificationModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [NotificationService, PrismaService],
 })
 export class AppModule {}

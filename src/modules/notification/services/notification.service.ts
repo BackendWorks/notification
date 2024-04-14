@@ -1,18 +1,20 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { SendEmailDto } from '../dtos/send.email.dto';
-import { SendTextDto } from '../dtos/send.text.dto';
 import { GetNotificationDto } from '../dtos/get.notification.dto';
 import { CreateNotificationDto } from '../dtos/create.notification.dto';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
 import { INotificationService } from '../interfaces/notification.service.interface';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { PrismaService } from 'src/core/services/prisma.service';
 import { Notification } from '@prisma/client';
 import {
   INotificationGetManyResponse,
-  INotificationSendResponse,
+  // INotificationSendResponse,
   INotificationSuccessResponse,
 } from '../interfaces/notification.interface';
-import { SendInAppDto } from '../dtos/send.inapp.dto';
+// import {
+//   SendEmailDto,
+//   SendInAppDto,
+//   SendTextDto,
+// } from 'src/app/app.interfaces';
 
 @Injectable()
 export class NotificationService implements INotificationService {
@@ -158,27 +160,27 @@ export class NotificationService implements INotificationService {
     }
   }
 
-  async sendEmail(data: SendEmailDto): Promise<INotificationSendResponse> {
-    return Promise.resolve({
-      acknowledged: true,
-      status: 'OK',
-      transactionId: 'test',
-    });
-  }
+  // async sendEmail(data: SendEmailDto): Promise<INotificationSendResponse> {
+  //   return Promise.resolve({
+  //     acknowledged: true,
+  //     status: 'OK',
+  //     transactionId: 'test',
+  //   });
+  // }
 
-  async sendText(data: SendTextDto): Promise<INotificationSendResponse> {
-    return Promise.resolve({
-      acknowledged: true,
-      status: 'OK',
-      transactionId: 'test',
-    });
-  }
+  // async sendText(data: SendTextDto): Promise<INotificationSendResponse> {
+  //   return Promise.resolve({
+  //     acknowledged: true,
+  //     status: 'OK',
+  //     transactionId: 'test',
+  //   });
+  // }
 
-  async sendInApp(data: SendInAppDto): Promise<INotificationSendResponse> {
-    return Promise.resolve({
-      acknowledged: true,
-      status: 'OK',
-      transactionId: 'test',
-    });
-  }
+  // async sendInApp(data: SendInAppDto): Promise<INotificationSendResponse> {
+  //   return Promise.resolve({
+  //     acknowledged: true,
+  //     status: 'OK',
+  //     transactionId: 'test',
+  //   });
+  // }
 }

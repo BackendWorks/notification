@@ -7,47 +7,49 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { I18nContext } from 'nestjs-i18n';
+import { I18nService } from 'nestjs-i18n';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
-  async catch(exception: HttpException, host: ArgumentsHost) {
+  constructor(private readonly i18nService: I18nService) {}
+
+  catch(exception: unknown, host: ArgumentsHost) {
     const context = host.switchToHttp();
     const response = context.getResponse<Response>();
-    const i18n = I18nContext.current(host);
+    const request = context.getRequest<Request>();
 
     const statusCode =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
-    const message = await i18n.t(`translation.${exception.message}`);
 
-    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
-      const error = {
-        stack: exception.stack,
-        message,
-        statusCode,
-      };
-      this.logger.error(JSON.stringify(error));
-    }
+    const translationKey =
+      exception instanceof HttpException && exception.message
+        ? `translations.${exception.message}`
+        : 'translations.defaultErrorMessage';
 
-    if (message?.split('.')[0] === 'translation') {
-      const message = exception.message || 'Internal server error';
-      response.status(statusCode).json({
-        statusCode,
-        message,
-        timestamp: new Date().toISOString(),
-      });
-      return;
-    }
+    const message = this.i18nService.translate(translationKey, {
+      lang: request.headers['accept-language'] || 'en',
+    });
 
-    response.status(statusCode).json({
+    const errorResponse = {
       statusCode,
       message,
       timestamp: new Date().toISOString(),
-    });
-    return;
+    };
+
+    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+      const errorDetails = {
+        ...errorResponse,
+        stack: exception instanceof Error ? exception.stack : undefined,
+      };
+      this.logger.error(JSON.stringify(errorDetails));
+    } else {
+      this.logger.error(JSON.stringify(errorResponse));
+    }
+
+    response.status(statusCode).json(errorResponse);
   }
 }

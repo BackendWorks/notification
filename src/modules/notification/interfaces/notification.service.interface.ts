@@ -1,15 +1,17 @@
 import { Notification } from '@prisma/client';
 import { CreateNotificationDto } from '../dtos/create.notification.dto';
 import { GetNotificationDto } from '../dtos/get.notification.dto';
-import { SendEmailDto } from '../dtos/send.email.dto';
-import { SendTextDto } from '../dtos/send.text.dto';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
 import {
   INotificationGetManyResponse,
-  INotificationSendResponse,
+  // INotificationSendResponse,
   INotificationSuccessResponse,
 } from './notification.interface';
-import { SendInAppDto } from '../dtos/send.inapp.dto';
+// import {
+//   SendEmailDto,
+//   SendInAppDto,
+//   SendTextDto,
+// } from 'src/app/app.interfaces';
 
 export interface INotificationService {
   createNotification(
@@ -28,7 +30,7 @@ export interface INotificationService {
     userId: string,
     data: GetNotificationDto,
   ): Promise<INotificationGetManyResponse<Notification>>;
-  sendEmail(data: SendEmailDto): Promise<INotificationSendResponse>;
-  sendText(data: SendTextDto): Promise<INotificationSendResponse>;
-  sendInApp(data: SendInAppDto): Promise<INotificationSendResponse>;
+  // sendEmail(data: SendEmailDto): Promise<INotificationSendResponse>;
+  // sendText(data: SendTextDto): Promise<INotificationSendResponse>;
+  // sendInApp(data: SendInAppDto): Promise<INotificationSendResponse>;
 }

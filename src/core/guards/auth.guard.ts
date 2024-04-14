@@ -9,8 +9,8 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 import { IAuthUser } from 'src/modules/notification/interfaces/notification.interface';
+import { PUBLIC_ROUTE_KEY } from 'src/app/app.constant';
 
 @Injectable()
 export class AuthGuard {
@@ -21,10 +21,10 @@ export class AuthGuard {
 
   async canActivate(context: ExecutionContext) {
     const isRpc = context.getType() === 'rpc';
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(
+      PUBLIC_ROUTE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
     if (isPublic || isRpc) {
       return true;
     }

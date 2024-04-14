@@ -1,1 +1,5 @@
-{}
+{
+  "notificationNotFound": "Notification not found",
+  "notificationDeleted": "Notification deleted",
+  "accessTokenUnauthorized": "Access token is unauthorized."
+}
