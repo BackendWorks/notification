@@ -11,7 +11,7 @@ export class CreateNotificationDto {
   @ApiProperty()
   @IsNotEmpty()
   @IsArray()
-  recipientIds: string[];
+  recipientIds: number[];
 
   @ApiProperty()
   @IsNotEmpty()

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, Logger } from '@nestjs/common';
 import { SendEmailDto } from '../dtos/send.email.dto';
 import { SendTextDto } from '../dtos/send.text.dto';
@@ -5,7 +6,7 @@ import { GetNotificationDto } from '../dtos/get.notification.dto';
 import { CreateNotificationDto } from '../dtos/create.notification.dto';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
 import { INotificationService } from '../interfaces/notification.service.interface';
-import { PrismaService } from 'src/common/services/prisma.service';
+import { PrismaService } from '../../../common/services/prisma.service';
 import { Notification } from '@prisma/client';
 import {
   INotificationGetManyResponse,
@@ -20,7 +21,7 @@ export class NotificationService implements INotificationService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createNotification(
-    senderId: string,
+    senderId: number,
     data: CreateNotificationDto,
   ): Promise<Notification> {
     try {
@@ -108,7 +109,7 @@ export class NotificationService implements INotificationService {
   }
 
   async getNotifications(
-    userId: string,
+    userId: number,
     query: GetNotificationDto,
   ): Promise<INotificationGetManyResponse<Notification>> {
     try {
@@ -158,7 +159,7 @@ export class NotificationService implements INotificationService {
     }
   }
 
-  async sendEmail(data: SendEmailDto): Promise<INotificationSendResponse> {
+  async sendEmail(_data: SendEmailDto): Promise<INotificationSendResponse> {
     return Promise.resolve({
       acknowledged: true,
       status: 'OK',
@@ -166,7 +167,7 @@ export class NotificationService implements INotificationService {
     });
   }
 
-  async sendText(data: SendTextDto): Promise<INotificationSendResponse> {
+  async sendText(_data: SendTextDto): Promise<INotificationSendResponse> {
     return Promise.resolve({
       acknowledged: true,
       status: 'OK',
@@ -174,7 +175,7 @@ export class NotificationService implements INotificationService {
     });
   }
 
-  async sendInApp(data: SendInAppDto): Promise<INotificationSendResponse> {
+  async sendInApp(_data: SendInAppDto): Promise<INotificationSendResponse> {
     return Promise.resolve({
       acknowledged: true,
       status: 'OK',

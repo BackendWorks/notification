@@ -3,15 +3,20 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { AppController } from './app.controller';
 import { TerminusModule } from '@nestjs/terminus';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { CoreModule } from 'src/core/core.module';
 import { NotificationModule } from 'src/modules/notification/notification.module';
 import { CommonModule } from 'src/common/common.module';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { RolesGuard } from 'src/guards/roles.guard';
+import { ResponseInterceptor } from 'src/interceptors/response.interceptor';
+import { GlobalExceptionFilter } from 'src/interceptors/exception.interceptor';
+import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
+import { join } from 'path';
 
 @Module({
   imports: [
-    CoreModule,
-    TerminusModule,
     CommonModule,
+    TerminusModule,
     ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',
@@ -29,9 +34,37 @@ import { CommonModule } from 'src/common/common.module';
         inject: [ConfigService],
       },
     ]),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: join(__dirname, '../i18n/'),
+        watch: true,
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        AcceptLanguageResolver,
+      ],
+    }),
     NotificationModule,
   ],
   controllers: [AppController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: GlobalExceptionFilter,
+    },
+  ],
 })
 export class AppModule {}

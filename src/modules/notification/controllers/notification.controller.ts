@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { GetNotificationDto } from '../dtos/get.notification.dto';
-import { AuthUser } from 'src/core/decorators/auth.user.decorator';
+import { AuthUser } from 'src/decorators/auth.user.decorator';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
 import { CreateNotificationDto } from '../dtos/create.notification.dto';
 import { NotificationService } from '../services/notification.service';
@@ -17,15 +17,15 @@ import { SendEmailDto } from '../dtos/send.email.dto';
 import { SendTextDto } from '../dtos/send.text.dto';
 import { IAuthUser } from '../interfaces/notification.interface';
 import { SendInAppDto } from '../dtos/send.inapp.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('notification')
 @Controller({
   version: '1',
   path: '/notification',
 })
 export class NotificationController {
-  constructor(private readonly notificationService: NotificationService) {
-    //
-  }
+  constructor(private readonly notificationService: NotificationService) {}
 
   @EventPattern('sendTextMessage')
   async sendText(@Payload() data: SendTextDto) {

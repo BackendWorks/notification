@@ -9,8 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
-import { IAuthUser } from 'src/modules/notification/interfaces/notification.interface';
+import { IS_PUBLIC_KEY } from '../app/app.constant';
 
 @Injectable()
 export class AuthGuard {
@@ -20,6 +19,7 @@ export class AuthGuard {
   ) {}
 
   async canActivate(context: ExecutionContext) {
+    const request = context.switchToHttp().getRequest();
     const isRpc = context.getType() === 'rpc';
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -28,7 +28,6 @@ export class AuthGuard {
     if (isPublic || isRpc) {
       return true;
     }
-    const request = context.switchToHttp().getRequest();
     let token = request.headers['authorization'];
     if (!token) {
       throw new UnauthorizedException('accessTokenUnauthorized');
@@ -40,7 +39,7 @@ export class AuthGuard {
     if (!response) {
       throw new HttpException(response, HttpStatus.BAD_REQUEST);
     }
-    request.user = response.data as IAuthUser;
+    request.authUser = response;
     return true;
   }
 }

@@ -15,7 +15,8 @@ export interface INotificationSendResponse {
 }
 
 export interface IAuthUser {
-  id: string;
+  id: number;
   role: string;
   username: string;
+  device_token: string;
 }

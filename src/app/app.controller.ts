@@ -4,7 +4,7 @@ import {
   HealthCheckService,
   MongooseHealthIndicator,
 } from '@nestjs/terminus';
-import { Public } from 'src/core/decorators/public.decorator';
+import { Public } from 'src/decorators/public.decorator';
 
 @Controller()
 export class AppController {

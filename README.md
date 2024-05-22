@@ -1,47 +1,35 @@
-<h1 align="center"> (Development in progress of version 2) </h1>
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo_text.svg" width="320" alt="Nest Logo" /></a>
-</p>
-
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript repository.
+[Nest](https://github.com/nestjs/nest) Microservice framework file service TypeScript repository.
 
 ## Installation
 
 ```bash
-$ npm install
+$ yarn
 ```
 
 ## Running the app
 
 ```bash
 # development
-$ npm run dev
+$ yarn dev
 
 # production mode
-$ npm start
-
-# debug mode
-$ npm run debug
+$ yarn start
 ```
 
 ## Test
 
 ```bash
 # unit tests
-$ npm run test
+$ yarn test
 
 # e2e tests
-$ npm run test:e2e
+$ yarn test:e2e
 
 # test coverage
-$ npm run test:cov
+$ yarn test:cov
 ```
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
 
 ## License
 

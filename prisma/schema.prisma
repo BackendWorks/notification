@@ -20,7 +20,7 @@ model Notification {
   type          NotificationType
   subject       NotificationSubjectType
   actionPayload Json?
-  senderId      String
+  senderId      Int
   recipients    Recipients[]
   createdAt     DateTime                @default(now())
   updatedAt     DateTime                @updatedAt
@@ -30,7 +30,7 @@ model Notification {
 
 model Recipients {
   id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  userId         String
+  userId         Int
   seenByUser     Boolean       @default(false)
   notification   Notification? @relation(fields: [notificationId], references: [id])
   notificationId String?       @db.ObjectId

@@ -13,7 +13,7 @@ import { SendInAppDto } from '../dtos/send.inapp.dto';
 
 export interface INotificationService {
   createNotification(
-    senderId: string,
+    senderId: number,
     data: CreateNotificationDto,
   ): Promise<Notification>;
   updateNotification(
@@ -25,7 +25,7 @@ export interface INotificationService {
   ): Promise<INotificationSuccessResponse>;
   getNotification(notificationId: string): Promise<Notification>;
   getNotifications(
-    userId: string,
+    userId: number,
     data: GetNotificationDto,
   ): Promise<INotificationGetManyResponse<Notification>>;
   sendEmail(data: SendEmailDto): Promise<INotificationSendResponse>;
