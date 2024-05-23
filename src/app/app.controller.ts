@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, VERSION_NEUTRAL } from '@nestjs/common';
 import {
   HealthCheck,
   HealthCheckService,
@@ -6,7 +6,10 @@ import {
 } from '@nestjs/terminus';
 import { Public } from 'src/decorators/public.decorator';
 
-@Controller()
+@Controller({
+  version: VERSION_NEUTRAL,
+  path: '/',
+})
 export class AppController {
   constructor(
     private healthCheckService: HealthCheckService,
