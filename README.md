@@ -1,6 +1,6 @@
 ## Description
 
-[Nest](https://github.com/nestjs/nest) Microservice framework file service TypeScript repository.
+[Nest](https://github.com/nestjs/nest) Microservice framework notification service TypeScript repository.
 
 ## Installation
 
