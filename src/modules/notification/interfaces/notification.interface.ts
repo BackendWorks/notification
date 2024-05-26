@@ -1,13 +1,3 @@
-export interface INotificationSuccessResponse {
-  status: boolean;
-  message: string;
-}
-
-export interface INotificationGetManyResponse<T> {
-  count: number;
-  data: T[];
-}
-
 export interface INotificationSendResponse {
   acknowledged: boolean;
   status: string;
@@ -17,6 +7,5 @@ export interface INotificationSendResponse {
 export interface IAuthUser {
   id: number;
   role: string;
-  username: string;
   device_token: string;
 }

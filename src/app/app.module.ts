@@ -7,12 +7,12 @@ import { NotificationModule } from 'src/modules/notification/notification.module
 import { CommonModule } from 'src/common/common.module';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
-import { RolesGuard } from 'src/guards/roles.guard';
 import { ResponseInterceptor } from 'src/interceptors/response.interceptor';
 import { GlobalExceptionFilter } from 'src/interceptors/exception.interceptor';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
 import { join } from 'path';
 import { LoggingMiddleware } from 'src/middlewares/logging.middleware';
+import { PermissionsGuard } from 'src/guards/permission.guard';
 
 @Module({
   imports: [
@@ -56,7 +56,7 @@ import { LoggingMiddleware } from 'src/middlewares/logging.middleware';
     },
     {
       provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: PermissionsGuard,
     },
     {
       provide: APP_INTERCEPTOR,

@@ -9,7 +9,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { IS_PUBLIC_KEY } from '../app/app.constant';
+import { PUBLIC_ROUTE_KEY } from 'src/app/app.constant';
 
 @Injectable()
 export class AuthGuard {
@@ -21,10 +21,10 @@ export class AuthGuard {
   async canActivate(context: ExecutionContext) {
     const request = context.switchToHttp().getRequest();
     const isRpc = context.getType() === 'rpc';
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const isPublic = this.reflector.getAllAndOverride<boolean>(
+      PUBLIC_ROUTE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
     if (isPublic || isRpc) {
       return true;
     }
@@ -34,7 +34,7 @@ export class AuthGuard {
     }
     token = token.replace('Bearer ', '');
     const response = await firstValueFrom(
-      this.authClient.send('validateToken', token),
+      this.authClient.send('validateToken', JSON.stringify({ token })),
     );
     if (!response) {
       throw new HttpException(response, HttpStatus.BAD_REQUEST);

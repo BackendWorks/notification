@@ -1,5 +1,5 @@
 import { CustomDecorator, SetMetadata } from '@nestjs/common';
+import { PUBLIC_ROUTE_KEY } from 'src/app/app.constant';
 
-export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = (): CustomDecorator<string> =>
-  SetMetadata(IS_PUBLIC_KEY, true);
+  SetMetadata(PUBLIC_ROUTE_KEY, true);

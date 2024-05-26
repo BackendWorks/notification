@@ -8,7 +8,6 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { I18nService } from 'nestjs-i18n';
-import { isDev } from 'src/app/app.constant';
 
 @Catch(HttpException)
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -28,10 +27,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const errorMessageKey =
       exception instanceof HttpException
         ? exception.message
-        : 'error.internalServerError';
+        : 'translation.internalServerError';
     const message = await this.i18n.t(`translation.${errorMessageKey}`);
 
-    if (isDev && statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
       this.logger.error(exception);
     }
 
@@ -40,10 +39,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message,
       timestamp: new Date().toISOString(),
     };
-
-    if (isDev || statusCode !== HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(`Error: ${JSON.stringify(errorResponse)}`);
-    }
 
     response.status(statusCode).json(errorResponse);
   }

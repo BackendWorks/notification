@@ -1,73 +1,96 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { SendEmailDto } from '../dtos/send.email.dto';
 import { SendTextDto } from '../dtos/send.text.dto';
 import { GetNotificationDto } from '../dtos/get.notification.dto';
-import { CreateNotificationDto } from '../dtos/create.notification.dto';
+import { NotificationCreateDto } from '../dtos/create.notification.dto';
 import { UpdateNotificationDto } from '../dtos/update.notification.dto';
 import { INotificationService } from '../interfaces/notification.service.interface';
 import { PrismaService } from '../../../common/services/prisma.service';
-import { Notification } from '@prisma/client';
-import {
-  INotificationGetManyResponse,
-  INotificationSendResponse,
-  INotificationSuccessResponse,
-} from '../interfaces/notification.interface';
+import { INotificationSendResponse } from '../interfaces/notification.interface';
 import { SendInAppDto } from '../dtos/send.inapp.dto';
+import {
+  NotificationPaginationResponseDto,
+  NotificationResponseDto,
+} from '../dtos/notification.response.dto';
+import { GenericResponseDto } from '../dtos/generic.response.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class NotificationService implements INotificationService {
-  private readonly logger = new Logger(NotificationService.name);
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+  ) {
+    this.authClient.connect();
+  }
 
   async createNotification(
     senderId: number,
-    data: CreateNotificationDto,
-  ): Promise<Notification> {
-    try {
-      const { body, title, type, recipientIds, subject } = data;
+    data: NotificationCreateDto,
+  ): Promise<NotificationResponseDto> {
+    const { body, title, type, recipientIds, subject } = data;
 
-      const notification = await this.prismaService.notification.create({
+    const notification = await this.prismaService.notification.create({
+      data: {
+        title,
+        body,
+        type,
+        senderId,
+        actionPayload: {},
+        subject,
+      },
+    });
+
+    const recipients = [];
+    for (const userId of recipientIds) {
+      const recipient = await this.prismaService.recipients.create({
         data: {
-          title,
-          body,
-          type,
-          senderId,
-          actionPayload: {},
-          subject,
+          userId,
+          seenByUser: false,
+          notification: { connect: { id: notification.id } },
         },
       });
 
-      await Promise.all(
-        recipientIds.map((id) => {
-          return this.prismaService.recipients.create({
-            data: {
-              userId: id,
-              seenByUser: false,
-              notification: {
-                connect: {
-                  id: notification.id,
-                },
-              },
-            },
-          });
-        }),
+      const user = await firstValueFrom(
+        this.authClient.send(
+          'getUserById',
+          JSON.stringify({ userId: recipient.userId }),
+        ),
       );
 
-      return notification;
-    } catch (e) {
-      this.logger.error(e);
-      throw e;
+      recipients.push({ ...recipient, user });
     }
+
+    const sender = await firstValueFrom(
+      this.authClient.send('getUserById', JSON.stringify({ userId: senderId })),
+    );
+
+    return {
+      ...notification,
+      sender,
+      recipients,
+    };
   }
 
   async updateNotification(
     notificationId: string,
     data: UpdateNotificationDto,
-  ): Promise<Notification> {
+  ): Promise<NotificationResponseDto> {
     const { body, title } = data;
 
-    return this.prismaService.notification.update({
+    const check = await this.prismaService.notification.findUnique({
+      where: {
+        id: notificationId,
+      },
+    });
+
+    if (!check) {
+      throw new NotFoundException('notificationNotfound');
+    }
+
+    const notification = await this.prismaService.notification.update({
       where: {
         id: notificationId,
       },
@@ -76,11 +99,43 @@ export class NotificationService implements INotificationService {
         body,
       },
     });
+
+    const recipientsPopulated = [];
+
+    const recipients = await this.prismaService.recipients.findMany({
+      where: {
+        notificationId,
+      },
+    });
+
+    for (const recipient of recipients) {
+      const user = await firstValueFrom(
+        this.authClient.send(
+          'getUserById',
+          JSON.stringify({ userId: recipient.userId }),
+        ),
+      );
+
+      recipientsPopulated.push({ ...recipient, user });
+    }
+
+    const sender = await firstValueFrom(
+      this.authClient.send(
+        'getUserById',
+        JSON.stringify({ userId: notification.senderId }),
+      ),
+    );
+
+    return {
+      ...notification,
+      sender,
+      recipients: recipientsPopulated,
+    };
   }
 
   async deleteNotification(
     notificationId: string,
-  ): Promise<INotificationSuccessResponse> {
+  ): Promise<GenericResponseDto> {
     try {
       await this.prismaService.notification.update({
         where: {
@@ -92,26 +147,64 @@ export class NotificationService implements INotificationService {
         },
       });
       return {
-        message: 'Notification deleted',
         status: true,
+        message: 'notificationDeleted',
       };
     } catch (e) {
       throw e;
     }
   }
 
-  async getNotification(notificationId: string): Promise<Notification> {
-    return this.prismaService.notification.findUnique({
-      where: {
-        id: notificationId,
-      },
-    });
+  async getNotification(
+    notificationId: string,
+  ): Promise<NotificationResponseDto> {
+    try {
+      const notification = await this.prismaService.notification.findUnique({
+        where: {
+          id: notificationId,
+        },
+      });
+
+      const recipientsPopulated = [];
+
+      const recipients = await this.prismaService.recipients.findMany({
+        where: {
+          notificationId,
+        },
+      });
+
+      for (const recipient of recipients) {
+        const user = await firstValueFrom(
+          this.authClient.send(
+            'getUserById',
+            JSON.stringify({ userId: recipient.userId }),
+          ),
+        );
+
+        recipientsPopulated.push({ ...recipient, user });
+      }
+
+      const sender = await firstValueFrom(
+        this.authClient.send(
+          'getUserById',
+          JSON.stringify({ userId: notification.senderId }),
+        ),
+      );
+
+      return {
+        ...notification,
+        sender,
+        recipients: recipientsPopulated,
+      };
+    } catch (e) {
+      throw e;
+    }
   }
 
   async getNotifications(
     userId: number,
     query: GetNotificationDto,
-  ): Promise<INotificationGetManyResponse<Notification>> {
+  ): Promise<NotificationPaginationResponseDto> {
     try {
       const { skip, take, searchTerm } = query;
       const count = await this.prismaService.notification.count({
@@ -131,7 +224,7 @@ export class NotificationService implements INotificationService {
           }),
         },
       });
-      const data = await this.prismaService.notification.findMany({
+      const notifications = await this.prismaService.notification.findMany({
         where: {
           ...(userId && {
             senderId: userId,
@@ -150,9 +243,39 @@ export class NotificationService implements INotificationService {
         skip,
         take,
       });
+      const populatedNotifications = [];
+      for (const notification of notifications) {
+        const sender = await firstValueFrom(
+          this.authClient.send(
+            'getUserById',
+            JSON.stringify({ userId: notification.senderId }),
+          ),
+        );
+
+        const recipients = await this.prismaService.recipients.findMany({
+          where: { notificationId: notification.id },
+        });
+
+        const populatedRecipients = [];
+        for (const recipient of recipients) {
+          const user = await firstValueFrom(
+            this.authClient.send(
+              'getUserById',
+              JSON.stringify({ userId: recipient.userId }),
+            ),
+          );
+          populatedRecipients.push({ ...recipient, user });
+        }
+
+        populatedNotifications.push({
+          ...notification,
+          sender,
+          recipients: populatedRecipients,
+        });
+      }
       return {
         count,
-        data,
+        data: populatedNotifications,
       };
     } catch (e) {
       throw e;
