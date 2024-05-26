@@ -1,3 +1,4 @@
 {
-  "internalServerError": "Internal server error."
+  "internalServerError": "Internal server error.",
+  "accessTokenUnauthorized": "Access token is not authorized."
 }
