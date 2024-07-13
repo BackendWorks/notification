@@ -3,10 +3,11 @@ import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { Transport } from '@nestjs/microservices';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { AppModule } from './app/app.module';
-import { setupSwagger } from './swagger';
 import express, { Request, Response } from 'express';
 import helmet from 'helmet';
+
+import { AppModule } from './app/app.module';
+import { setupSwagger } from './swagger';
 
 async function bootstrap() {
   const logger = new Logger();

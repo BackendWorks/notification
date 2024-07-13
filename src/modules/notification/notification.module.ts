@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
-import { NotificationController } from './controllers/notification.controller';
-import { NotificationService } from './services/notification.service';
 import { CommonModule } from 'src/common/common.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+
+import { NotificationService } from './services/notification.service';
+import { NotificationController } from './controllers/notification.controller';
 
 @Module({
   controllers: [NotificationController],
