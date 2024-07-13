@@ -1,7 +1,7 @@
 import {
-  ExceptionFilter,
-  Catch,
   ArgumentsHost,
+  Catch,
+  ExceptionFilter,
   HttpException,
   HttpStatus,
   Logger,
@@ -9,9 +9,9 @@ import {
 import { Response } from 'express';
 import { I18nService } from 'nestjs-i18n';
 
-@Catch(HttpException)
-export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+@Catch()
+export class HttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(HttpExceptionFilter.name);
 
   constructor(private readonly i18n: I18nService) {}
 
@@ -24,21 +24,26 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const errorMessageKey =
-      exception instanceof HttpException
+    const translationKey =
+      exception instanceof HttpException && exception.message
         ? exception.message
-        : 'translation.internalServerError';
-    const message = await this.i18n.t(`translation.${errorMessageKey}`);
+        : 'error.500';
 
-    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
-      this.logger.error(exception);
-    }
+    const message = await this.i18n.t(translationKey);
 
     const errorResponse = {
       statusCode,
-      message,
       timestamp: new Date().toISOString(),
+      message,
     };
+
+    if (statusCode === HttpStatus.INTERNAL_SERVER_ERROR) {
+      const errorDetails = {
+        ...errorResponse,
+        stack: exception instanceof Error ? exception.stack : undefined,
+      };
+      this.logger.error(JSON.stringify(errorDetails));
+    }
 
     response.status(statusCode).json(errorResponse);
   }

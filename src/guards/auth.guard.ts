@@ -39,7 +39,7 @@ export class AuthGuard {
     if (!response) {
       throw new HttpException(response, HttpStatus.BAD_REQUEST);
     }
-    request.authUser = response;
+    request.user = response;
     return true;
   }
 }

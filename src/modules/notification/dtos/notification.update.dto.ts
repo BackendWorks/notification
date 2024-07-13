@@ -2,7 +2,7 @@ import { faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
-export class UpdateNotificationDto {
+export class NotificationUpdateDto {
   @ApiProperty({
     example: faker.lorem.sentence(),
   })

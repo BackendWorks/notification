@@ -1,6 +1,5 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ClientsModule, Transport } from '@nestjs/microservices';
-import { AppController } from './app.controller';
+import { join } from 'path';
+
 import { TerminusModule } from '@nestjs/terminus';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { NotificationModule } from 'src/modules/notification/notification.module';
@@ -8,16 +7,33 @@ import { CommonModule } from 'src/common/common.module';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ResponseInterceptor } from 'src/interceptors/response.interceptor';
-import { GlobalExceptionFilter } from 'src/interceptors/exception.interceptor';
 import { AcceptLanguageResolver, I18nModule, QueryResolver } from 'nestjs-i18n';
-import { join } from 'path';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { LoggingMiddleware } from 'src/middlewares/logging.middleware';
-import { PermissionsGuard } from 'src/guards/permission.guard';
+import { HttpExceptionFilter } from 'src/filters/http.exception.filter';
+import { RolesGuard } from 'src/guards/roles.guard';
+
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
     CommonModule,
     TerminusModule,
+    NotificationModule,
+
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: join(__dirname, '../i18n/'),
+        watch: true,
+      },
+      resolvers: [
+        { use: QueryResolver, options: ['lang'] },
+        AcceptLanguageResolver,
+      ],
+    }),
+
     ClientsModule.registerAsync([
       {
         name: 'AUTH_SERVICE',
@@ -35,18 +51,6 @@ import { PermissionsGuard } from 'src/guards/permission.guard';
         inject: [ConfigService],
       },
     ]),
-    I18nModule.forRoot({
-      fallbackLanguage: 'en',
-      loaderOptions: {
-        path: join(__dirname, '../i18n/'),
-        watch: true,
-      },
-      resolvers: [
-        { use: QueryResolver, options: ['lang'] },
-        AcceptLanguageResolver,
-      ],
-    }),
-    NotificationModule,
   ],
   controllers: [AppController],
   providers: [
@@ -56,7 +60,7 @@ import { PermissionsGuard } from 'src/guards/permission.guard';
     },
     {
       provide: APP_GUARD,
-      useClass: PermissionsGuard,
+      useClass: RolesGuard,
     },
     {
       provide: APP_INTERCEPTOR,
@@ -64,7 +68,7 @@ import { PermissionsGuard } from 'src/guards/permission.guard';
     },
     {
       provide: APP_FILTER,
-      useClass: GlobalExceptionFilter,
+      useClass: HttpExceptionFilter,
     },
   ],
 })

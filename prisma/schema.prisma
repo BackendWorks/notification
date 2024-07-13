@@ -30,7 +30,7 @@ model Notification {
 
 model Recipients {
   id             String        @id @default(auto()) @map("_id") @db.ObjectId
-  userId         Int
+  recipientId    String
   seenByUser     Boolean       @default(false)
   notification   Notification? @relation(fields: [notificationId], references: [id])
   notificationId String?       @db.ObjectId

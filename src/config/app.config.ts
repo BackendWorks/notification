@@ -3,7 +3,7 @@ import { registerAs } from '@nestjs/config';
 export default registerAs(
   'app',
   (): Record<string, any> => ({
-    name: process.env.APP_NAME ?? 'post',
+    name: process.env.APP_NAME ?? 'notification',
     env: process.env.APP_ENV ?? 'development',
     versioning: {
       enable: process.env.HTTP_VERSIONING_ENABLE === 'true' ?? false,
@@ -16,7 +16,7 @@ export default registerAs(
       host: process.env.HTTP_HOST ?? '0.0.0.0',
       port: process.env.HTTP_PORT
         ? Number.parseInt(process.env.HTTP_PORT)
-        : 9002,
+        : 9004,
     },
   }),
 );

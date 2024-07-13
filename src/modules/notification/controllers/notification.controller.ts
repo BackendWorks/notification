@@ -8,24 +8,24 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { EventPattern, Payload } from '@nestjs/microservices';
-import { GetNotificationDto } from '../dtos/get.notification.dto';
-import { UpdateNotificationDto } from '../dtos/update.notification.dto';
-import { NotificationCreateDto } from '../dtos/create.notification.dto';
-import { NotificationService } from '../services/notification.service';
-import { SendEmailDto } from '../dtos/send.email.dto';
-import { SendTextDto } from '../dtos/send.text.dto';
-import { IAuthUser } from '../interfaces/notification.interface';
-import { SendInAppDto } from '../dtos/send.inapp.dto';
+import { EventPattern } from '@nestjs/microservices';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthUser } from 'src/decorators/auth.decorator';
 import { AllowedRoles } from 'src/decorators/roles.decorator';
-import { Serialize } from 'src/decorators/serialize.decorator';
+import { TransformMessagePayload } from 'src/decorators/payload.decorator';
+
+import { NotificationCreateDto } from '../dtos/notification.create.dto';
+import { NotificationService } from '../services/notification.service';
+import { SendEmailDto } from '../dtos/notification.send.email.dto';
+import { SendTextDto } from '../dtos/notification.send.text.dto';
+import { IAuthUser } from '../interfaces/notification.interface';
+import { SendInAppDto } from '../dtos/notification.send.inapp.dto';
 import {
   NotificationPaginationResponseDto,
   NotificationResponseDto,
 } from '../dtos/notification.response.dto';
-import { GenericResponseDto } from '../dtos/generic.response.dto';
+import { NotificationUpdateDto } from '../dtos/notification.update.dto';
+import { NotificationGetDto } from '../dtos/notification.get.dto';
 
 @ApiTags('notification')
 @Controller({
@@ -36,26 +36,22 @@ export class NotificationController {
   constructor(private readonly notificationService: NotificationService) {}
 
   @EventPattern('sendTextMessage')
-  async sendText(@Payload() data: SendTextDto) {
-    const payload = JSON.parse(JSON.stringify(data));
-    this.notificationService.sendText(payload);
+  async sendText(@TransformMessagePayload() data: SendTextDto) {
+    this.notificationService.sendText(data);
   }
 
   @EventPattern('sendEmail')
-  async sendEmail(@Payload() data: SendEmailDto) {
-    const payload = JSON.parse(JSON.stringify(data));
-    this.notificationService.sendEmail(payload);
+  async sendEmail(@TransformMessagePayload() data: SendEmailDto) {
+    this.notificationService.sendEmail(data);
   }
 
   @EventPattern('sendInApp')
-  async sendInApp(@Payload() data: SendInAppDto) {
-    const payload = JSON.parse(JSON.stringify(data));
-    this.notificationService.sendEmail(payload);
+  async sendInApp(@TransformMessagePayload() data: SendInAppDto) {
+    this.notificationService.sendEmail(data);
   }
 
   @ApiBearerAuth('accessToken')
   @AllowedRoles(['Admin'])
-  @Serialize(NotificationResponseDto)
   @Post()
   async createNotification(
     @AuthUser() user: IAuthUser,
@@ -66,28 +62,23 @@ export class NotificationController {
 
   @ApiBearerAuth('accessToken')
   @AllowedRoles(['Admin'])
-  @Serialize(NotificationResponseDto)
   @Put(':id')
   async updateNotification(
     @Param('id') notificationId: string,
-    @Body() data: UpdateNotificationDto,
+    @Body() data: NotificationUpdateDto,
   ): Promise<NotificationResponseDto> {
     return this.notificationService.updateNotification(notificationId, data);
   }
 
   @ApiBearerAuth('accessToken')
   @AllowedRoles(['Admin'])
-  @Serialize(NotificationResponseDto)
   @Delete(':id')
-  async deleteNotification(
-    @Param('id') notificationId: string,
-  ): Promise<GenericResponseDto> {
+  async deleteNotification(@Param('id') notificationId: string): Promise<void> {
     return this.notificationService.deleteNotification(notificationId);
   }
 
   @ApiBearerAuth('accessToken')
   @AllowedRoles(['Admin'])
-  @Serialize(NotificationResponseDto)
   @Get(':id')
   async getNotification(
     @AuthUser() user: IAuthUser,
@@ -98,11 +89,10 @@ export class NotificationController {
 
   @ApiBearerAuth('accessToken')
   @AllowedRoles(['Admin'])
-  @Serialize(NotificationPaginationResponseDto)
   @Get()
   async getNotifications(
     @AuthUser() user: IAuthUser,
-    @Query() data: GetNotificationDto,
+    @Query() data: NotificationGetDto,
   ): Promise<NotificationPaginationResponseDto> {
     return this.notificationService.getNotifications(user.id, data);
   }

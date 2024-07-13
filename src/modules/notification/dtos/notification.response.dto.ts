@@ -1,6 +1,7 @@
 import { $Enums, Notification, Prisma, Recipients } from '@prisma/client';
 import { Type } from 'class-transformer';
 import { ValidateNested } from 'class-validator';
+
 import { UserResponseDto } from './user.response.dto';
 
 export class NotificationResponseDto implements Notification {
@@ -31,6 +32,7 @@ export class RecipientsResponseDto implements Recipients {
   notificationId: string;
   seenByUser: boolean;
   userId: number;
+  recipientId: string;
 
   @Type(() => UserResponseDto)
   @ValidateNested()

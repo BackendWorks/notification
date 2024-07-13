@@ -6,7 +6,7 @@ export class UserResponseDto {
   device_token: string;
   email: string;
   first_name: string;
-  id: number;
+  id: string;
   is_deleted: boolean;
   is_verified: boolean;
   last_name: string;

@@ -1,7 +1,7 @@
 import { faker } from '@faker-js/faker';
 import { ApiProperty } from '@nestjs/swagger';
 import { NotificationSubjectType, NotificationType } from '@prisma/client';
-import { IsArray, IsEnum, IsJSON, IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 export class NotificationCreateDto {
   @ApiProperty({
@@ -12,11 +12,13 @@ export class NotificationCreateDto {
   title: string;
 
   @ApiProperty({
-    example: Array.from({ length: 3 }, () => faker.number.int()),
+    example: [],
   })
   @IsNotEmpty()
-  @IsArray()
-  recipientIds: number[];
+  @IsArray({
+    message: 'ids should be array of string',
+  })
+  recipientIds: string[];
 
   @ApiProperty({
     example: faker.lorem.paragraph(),
@@ -26,20 +28,14 @@ export class NotificationCreateDto {
   body: string;
 
   @ApiProperty({
-    example: {},
-  })
-  @IsJSON()
-  actionPayload: Record<string, any>;
-
-  @ApiProperty({
-    example: NotificationType.Email,
+    enum: NotificationType,
   })
   @IsNotEmpty()
   @IsEnum(NotificationType)
   type: NotificationType;
 
   @ApiProperty({
-    example: NotificationSubjectType.Welcome,
+    enum: NotificationSubjectType,
   })
   @IsNotEmpty()
   @IsEnum(NotificationSubjectType)

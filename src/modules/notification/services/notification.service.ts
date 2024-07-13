@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { SendEmailDto } from '../dtos/send.email.dto';
-import { SendTextDto } from '../dtos/send.text.dto';
-import { GetNotificationDto } from '../dtos/get.notification.dto';
-import { NotificationCreateDto } from '../dtos/create.notification.dto';
-import { UpdateNotificationDto } from '../dtos/update.notification.dto';
+import { ClientProxy } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
+
+import { SendEmailDto } from '../dtos/notification.send.email.dto';
+import { SendTextDto } from '../dtos/notification.send.text.dto';
+import { NotificationCreateDto } from '../dtos/notification.create.dto';
 import { INotificationService } from '../interfaces/notification.service.interface';
 import { PrismaService } from '../../../common/services/prisma.service';
 import { INotificationSendResponse } from '../interfaces/notification.interface';
-import { SendInAppDto } from '../dtos/send.inapp.dto';
+import { SendInAppDto } from '../dtos/notification.send.inapp.dto';
 import {
   NotificationPaginationResponseDto,
   NotificationResponseDto,
 } from '../dtos/notification.response.dto';
-import { GenericResponseDto } from '../dtos/generic.response.dto';
-import { ClientProxy } from '@nestjs/microservices';
-import { firstValueFrom } from 'rxjs';
+import { NotificationUpdateDto } from '../dtos/notification.update.dto';
+import { NotificationGetDto } from '../dtos/notification.get.dto';
 
 @Injectable()
 export class NotificationService implements INotificationService {
@@ -47,7 +47,7 @@ export class NotificationService implements INotificationService {
     for (const userId of recipientIds) {
       const recipient = await this.prismaService.recipients.create({
         data: {
-          userId,
+          recipientId: userId,
           seenByUser: false,
           notification: { connect: { id: notification.id } },
         },
@@ -56,7 +56,7 @@ export class NotificationService implements INotificationService {
       const user = await firstValueFrom(
         this.authClient.send(
           'getUserById',
-          JSON.stringify({ userId: recipient.userId }),
+          JSON.stringify({ userId: recipient.recipientId }),
         ),
       );
 
@@ -76,7 +76,7 @@ export class NotificationService implements INotificationService {
 
   async updateNotification(
     notificationId: string,
-    data: UpdateNotificationDto,
+    data: NotificationUpdateDto,
   ): Promise<NotificationResponseDto> {
     const { body, title } = data;
 
@@ -112,7 +112,7 @@ export class NotificationService implements INotificationService {
       const user = await firstValueFrom(
         this.authClient.send(
           'getUserById',
-          JSON.stringify({ userId: recipient.userId }),
+          JSON.stringify({ userId: recipient.recipientId }),
         ),
       );
 
@@ -133,9 +133,7 @@ export class NotificationService implements INotificationService {
     };
   }
 
-  async deleteNotification(
-    notificationId: string,
-  ): Promise<GenericResponseDto> {
+  async deleteNotification(notificationId: string): Promise<void> {
     try {
       await this.prismaService.notification.update({
         where: {
@@ -146,10 +144,7 @@ export class NotificationService implements INotificationService {
           isDeleted: true,
         },
       });
-      return {
-        status: true,
-        message: 'notificationDeleted',
-      };
+      return;
     } catch (e) {
       throw e;
     }
@@ -177,7 +172,7 @@ export class NotificationService implements INotificationService {
         const user = await firstValueFrom(
           this.authClient.send(
             'getUserById',
-            JSON.stringify({ userId: recipient.userId }),
+            JSON.stringify({ userId: recipient.recipientId }),
           ),
         );
 
@@ -203,7 +198,7 @@ export class NotificationService implements INotificationService {
 
   async getNotifications(
     userId: number,
-    query: GetNotificationDto,
+    query: NotificationGetDto,
   ): Promise<NotificationPaginationResponseDto> {
     try {
       const { skip, take, searchTerm } = query;
@@ -261,7 +256,7 @@ export class NotificationService implements INotificationService {
           const user = await firstValueFrom(
             this.authClient.send(
               'getUserById',
-              JSON.stringify({ userId: recipient.userId }),
+              JSON.stringify({ userId: recipient.recipientId }),
             ),
           );
           populatedRecipients.push({ ...recipient, user });
