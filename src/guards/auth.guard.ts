@@ -1,7 +1,5 @@
 import {
   ExecutionContext,
-  HttpException,
-  HttpStatus,
   Inject,
   Injectable,
   UnauthorizedException,
@@ -30,14 +28,14 @@ export class AuthGuard {
     }
     let token = request.headers['authorization'];
     if (!token) {
-      throw new UnauthorizedException('accessTokenUnauthorized');
+      throw new UnauthorizedException('auth.accessTokenUnauthorized');
     }
     token = token.replace('Bearer ', '');
     const response = await firstValueFrom(
       this.authClient.send('validateToken', JSON.stringify({ token })),
     );
     if (!response) {
-      throw new HttpException(response, HttpStatus.BAD_REQUEST);
+      throw new UnauthorizedException('auth.accessTokenUnauthorized');
     }
     request.user = response;
     return true;
